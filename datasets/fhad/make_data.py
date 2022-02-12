@@ -184,18 +184,32 @@ def main():
                     points = np.concatenate((skel_camcoords, verts_camcoords))
                     projected_points = np.concatenate((skel_proj, verts_proj))
 
-                    if seq_idx == '1':  # val
-                        images_val.append(each_frame)
+                    if seq_idx.name == '1':  # val
+                        images_val.append(str(each_frame))
                         points2d_val.append(projected_points)
                         points3d_val.append(points)
-                    elif seq_idx == '3':  # test
-                        images_test.append(each_frame)
+                    elif seq_idx.name == '3':  # test
+                        images_test.append(str(each_frame))
                         points2d_test.append(projected_points)
                         points3d_test.append(points)
                     else:  # train
-                        images_train.append(each_frame)
+                        images_train.append(str(each_frame))
                         points2d_train.append(projected_points)
                         points3d_train.append(points)
+
+    print("#=====Summary=====#")
+    print(f"images_val count: {len(images_val)}")
+    print(f"points2d_val count: {len(points2d_val)}")
+    print(f"points3d_val count: {len(points3d_val)}")
+    print()
+    print(f"images_train count: {len(images_train)}")
+    print(f"points2d_train count: {len(points2d_train)}")
+    print(f"points3d_train count: {len(points3d_train)}")
+    print()
+    print(f"images_test count: {len(images_test)}")
+    print(f"points2d_test count: {len(points2d_test)}")
+    print(f"points3d_test count: {len(points3d_test)}")
+    print()
 
     np.save('./images-train.npy', np.array(images_train))
     np.save('./points2d-train.npy', np.array(points2d_train))
