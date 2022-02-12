@@ -17,7 +17,7 @@ ROOT = None
 
 if ROOT is None:
     raise ValueError("Set the ROOT var to the path to the First-Person Hand Action Benchmark (F-PHAB)."
-                     "Data set can be found here: https://guiggh.github.io/publications/first-person-hands/")
+                     "Dataset can be found here: https://guiggh.github.io/publications/first-person-hands/")
 
 
 # Loading utilities
@@ -82,13 +82,13 @@ class Sample:
 def main():
     # Setup Paths
     root_path = Path(ROOT)
-    skeleton_root = Path(root_path, 'Hand_pose_annotation_v1')
-    obj_root = Path(root_path, 'Object_models')
-    obj_trans_root = Path(root_path, 'Object_6D_pose_annotation_v1_1')
-    video_file_root = Path(root_path, 'Video_files')
+    skeleton_root_path = Path(root_path, 'Hand_pose_annotation_v1')
+    object_models_root_path = Path(root_path, 'Object_models')
+    object_translations_root_path = Path(root_path, 'Object_6D_pose_annotation_v1_1')
+    video_files_root_path = Path(root_path, 'Video_files')
 
     # Load object mesh
-    object_infos = load_objects(obj_root)
+    object_infos = load_objects(object_models_root_path)
     reorder_idx = np.array([0, 1, 6, 7, 8, 2, 9, 10, 11, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20])
 
     cam_extr = np.array([[0.999988496304, -0.00468848412856, 0.000982563360594, 25.7],
@@ -116,7 +116,7 @@ def main():
     points3d_test = []
 
     # Traverse the dataset directory and prepare the data for processing
-    for subject in sorted(obj_trans_root.iterdir()):
+    for subject in sorted(object_translations_root_path.iterdir()):
         if subject.name.startswith("."):
             continue
         print(f"* {subject}")
@@ -131,7 +131,7 @@ def main():
                     continue
                 print(f'   ∟ {seq_idx.name}')
 
-                video_frame_dir = Path(video_file_root, *seq_idx.parts[-3:], 'color')
+                video_frame_dir = Path(video_files_root_path, *seq_idx.parts[-3:], 'color')
                 if not video_frame_dir.exists():
                     print(f"WARNING: Could not find directory at {video_frame_dir}.  No video data is loaded.")
                     continue
@@ -156,10 +156,10 @@ def main():
                                     )
 
                     # Load skeleton
-                    skel = get_skeleton(sample, skeleton_root)[reorder_idx]
+                    skel = get_skeleton(sample, skeleton_root_path)[reorder_idx]
 
                     # Load object transform
-                    obj_trans = get_obj_transform(sample, obj_trans_root)
+                    obj_trans = get_obj_transform(sample, object_translations_root_path)
 
                     mesh = object_infos[sample.object_name]
                     verts = np.array(mesh.bounding_box_oriented.vertices) * 1000
