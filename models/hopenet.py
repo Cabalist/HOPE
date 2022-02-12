@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 import torch
 import torch.nn as nn
-from models.graphunet import GraphUNet, GraphNet
-from models.resnet import resnet50, resnet10
+from .graphunet import GraphUNet, GraphNet
+from .resnet import resnet50
 
 
 class HopeNet(nn.Module):
 
     def __init__(self):
-        super(HopeNet, self).__init__()
-        self.resnet = resnet50(pretrained=False, num_classes=29*2)
+        super().__init__()
+        self.resnet = resnet50(pretrained=False, num_classes=29 * 2)
         self.graphnet = GraphNet(in_features=2050, out_features=2)
         self.graphunet = GraphUNet(in_features=2, out_features=3)
 

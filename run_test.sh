@@ -9,4 +9,3 @@ python HOPE.py \
   --gpu \
   --gpu_number 0 \
   --pretrained_model ./checkpoints/fhad/model-5000.pkl
-

@@ -1,13 +1,12 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.nn.parameter import Parameter
-import numpy as np
+
 
 class GraphConv(nn.Module):
     
     def __init__(self, in_features, out_features, activation=nn.ReLU(inplace=True)):
-        super(GraphConv, self).__init__()
+        super().__init__()
         self.fc = nn.Linear(in_features=in_features, out_features=out_features)
         #self.adj_sq = adj_sq
         self.activation = activation
@@ -50,7 +49,7 @@ class GraphConv(nn.Module):
 class GraphPool(nn.Module):
 
     def __init__(self, in_nodes, out_nodes):
-        super(GraphPool, self).__init__()
+        super().__init__()
         self.fc = nn.Linear(in_features=in_nodes, out_features=out_nodes)
 
 
@@ -64,7 +63,7 @@ class GraphPool(nn.Module):
 class GraphUnpool(nn.Module):
 
     def __init__(self, in_nodes, out_nodes):
-        super(GraphUnpool, self).__init__()
+        super().__init__()
         self.fc = nn.Linear(in_features=in_nodes, out_features=out_nodes)
 
 
@@ -78,7 +77,7 @@ class GraphUnpool(nn.Module):
 class GraphUNet(nn.Module):
 
     def __init__(self, in_features=2, out_features=3):
-        super(GraphUNet, self).__init__()
+        super().__init__()
 
         self.A_0 = Parameter(torch.eye(29).float().cuda(), requires_grad=True)
         self.A_1 = Parameter(torch.eye(15).float().cuda(), requires_grad=True)
@@ -166,7 +165,7 @@ class GraphUNet(nn.Module):
 class GraphNet(nn.Module):
     
     def __init__(self, in_features=2, out_features=2):
-        super(GraphNet, self).__init__()
+        super().__init__()
 
         self.A_hat = Parameter(torch.eye(29).float().cuda(), requires_grad=True)
         

@@ -33,7 +33,7 @@ class BasicBlock(nn.Module):
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
                  base_width=64, dilation=1, norm_layer=None):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
@@ -74,7 +74,7 @@ class Bottleneck(nn.Module):
 
     def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
                  base_width=64, dilation=1, norm_layer=None):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         width = int(planes * (base_width / 64.)) * groups
@@ -117,7 +117,7 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False,
                  groups=1, width_per_group=64, replace_stride_with_dilation=None,
                  norm_layer=None):
-        super(ResNet, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -129,8 +129,7 @@ class ResNet(nn.Module):
             # the 2x2 stride with a dilated convolution instead
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
-            raise ValueError("replace_stride_with_dilation should be None "
-                             "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
+            raise ValueError(f"replace_stride_with_dilation should be None or a 3-element tuple, got {replace_stride_with_dilation}")
         self.groups = groups
         self.base_width = width_per_group
         self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
@@ -174,8 +173,8 @@ class ResNet(nn.Module):
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+                    conv1x1(self.inplanes, planes * block.expansion, stride),
+                    norm_layer(planes * block.expansion),
             )
 
         layers = []
@@ -207,11 +206,12 @@ class ResNet(nn.Module):
 
         return x.view(-1, 29, 2), out
 
+
 def resnet10(pretrained=False, num_classes=1000, **kwargs):
     """Constructs a ResNet-10 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """ 
+    """
     model = ResNet(BasicBlock, [1, 1, 1, 1], num_classes=1000, **kwargs)
     # if pretrained:
     #     model.load_state_dict(model_zoo.load_url(model_urls['resnet10']))
@@ -219,11 +219,12 @@ def resnet10(pretrained=False, num_classes=1000, **kwargs):
     model.fc = nn.Linear(num_ftrs, num_classes)
     return model
 
+
 def resnet18(pretrained=False, num_classes=1000, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """ 
+    """
     model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes=1000, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
@@ -231,11 +232,12 @@ def resnet18(pretrained=False, num_classes=1000, **kwargs):
     model.fc = nn.Linear(num_ftrs, num_classes)
     return model
 
+
 def resnet50(pretrained=False, num_classes=1000, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """ 
+    """
     model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes=1000, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
@@ -243,11 +245,12 @@ def resnet50(pretrained=False, num_classes=1000, **kwargs):
     model.fc = nn.Linear(num_ftrs, num_classes)
     return model
 
+
 def resnet101(pretrained=False, num_classes=1000, **kwargs):
     """Constructs a ResNet-101 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """ 
+    """
     model = ResNet(Bottleneck, [3, 4, 23, 3], num_classes=1000, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet101']))
@@ -260,11 +263,10 @@ def resnet152(pretrained=False, num_classes=1000, **kwargs):
     """Constructs a ResNet-152 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """ 
+    """
     model = ResNet(Bottleneck, [3, 8, 36, 3], num_classes=1000, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet152']))
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, num_classes)
     return model
-
