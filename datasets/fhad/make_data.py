@@ -6,7 +6,7 @@ import trimesh
 
 # Loading utilities
 def load_objects(obj_root):
-    object_names = ['juice_bottle', 'liquid_soap', 'milk', 'salt']
+    object_names = ['juice', 'liquid_soap', 'milk', 'salt']
     all_models = {}
     for obj_name in object_names:
         obj_path = os.path.join(obj_root, f'{obj_name}_model', f'{obj_name}_model.ply')
