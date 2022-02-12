@@ -4,42 +4,39 @@ from torch.nn.parameter import Parameter
 
 
 class GraphConv(nn.Module):
-    
+
     def __init__(self, in_features, out_features, activation=nn.ReLU(inplace=True)):
         super().__init__()
         self.fc = nn.Linear(in_features=in_features, out_features=out_features)
-        #self.adj_sq = adj_sq
+        # self.adj_sq = adj_sq
         self.activation = activation
-        #self.scale_identity = scale_identity
-        #self.I = Parameter(torch.eye(number_of_nodes, requires_grad=False).unsqueeze(0))
-
+        # self.scale_identity = scale_identity
+        # self.I = Parameter(torch.eye(number_of_nodes, requires_grad=False).unsqueeze(0))
 
     def laplacian(self, A_hat):
         D_hat = (torch.sum(A_hat, 0) + 1e-5) ** (-0.5)
         L = D_hat * A_hat * D_hat
         return L
-    
-    
+
     def laplacian_batch(self, A_hat):
-        #batch, N = A.shape[:2]
-        #if self.adj_sq:
+        # batch, N = A.shape[:2]
+        # if self.adj_sq:
         #    A = torch.bmm(A, A)  # use A^2 to increase graph connectivity
-        #I = torch.eye(N).unsqueeze(0).to(device)
-        #I = self.I
-        #if self.scale_identity:
+        # I = torch.eye(N).unsqueeze(0).to(device)
+        # I = self.I
+        # if self.scale_identity:
         #    I = 2 * I  # increase weight of self connections
-        #A_hat = A + I
+        # A_hat = A + I
         batch, N = A_hat.shape[:2]
         D_hat = (torch.sum(A_hat, 1) + 1e-5) ** (-0.5)
         L = D_hat.view(batch, N, 1) * A_hat * D_hat.view(batch, 1, N)
         return L
 
-
     def forward(self, X, A):
         batch = X.size(0)
-        #A = self.laplacian(A)
+        # A = self.laplacian(A)
         A_hat = A.unsqueeze(0).repeat(batch, 1, 1)
-        #X = self.fc(torch.bmm(A_hat, X))
+        # X = self.fc(torch.bmm(A_hat, X))
         X = self.fc(torch.bmm(self.laplacian_batch(A_hat), X))
         if self.activation is not None:
             X = self.activation(X)
@@ -51,7 +48,6 @@ class GraphPool(nn.Module):
     def __init__(self, in_nodes, out_nodes):
         super().__init__()
         self.fc = nn.Linear(in_features=in_nodes, out_features=out_nodes)
-
 
     def forward(self, X):
         X = X.transpose(1, 2)
@@ -66,7 +62,6 @@ class GraphUnpool(nn.Module):
         super().__init__()
         self.fc = nn.Linear(in_features=in_nodes, out_features=out_nodes)
 
-
     def forward(self, X):
         X = X.transpose(1, 2)
         X = self.fc(X)
@@ -79,12 +74,12 @@ class GraphUNet(nn.Module):
     def __init__(self, in_features=2, out_features=3):
         super().__init__()
 
-        self.A_0 = Parameter(torch.eye(29).float().cuda(), requires_grad=True)
-        self.A_1 = Parameter(torch.eye(15).float().cuda(), requires_grad=True)
-        self.A_2 = Parameter(torch.eye(7).float().cuda(), requires_grad=True)
-        self.A_3 = Parameter(torch.eye(4).float().cuda(), requires_grad=True)
-        self.A_4 = Parameter(torch.eye(2).float().cuda(), requires_grad=True)
-        self.A_5 = Parameter(torch.eye(1).float().cuda(), requires_grad=True)
+        self.A_0 = Parameter(torch.eye(29).float(), requires_grad=True)
+        self.A_1 = Parameter(torch.eye(15).float(), requires_grad=True)
+        self.A_2 = Parameter(torch.eye(7).float(), requires_grad=True)
+        self.A_3 = Parameter(torch.eye(4).float(), requires_grad=True)
+        self.A_4 = Parameter(torch.eye(2).float(), requires_grad=True)
+        self.A_5 = Parameter(torch.eye(1).float(), requires_grad=True)
 
         self.gconv1 = GraphConv(in_features, 4)  # 29 = 21 H + 8 O
         self.pool1 = GraphPool(29, 15)
@@ -163,20 +158,19 @@ class GraphUNet(nn.Module):
 
 
 class GraphNet(nn.Module):
-    
+
     def __init__(self, in_features=2, out_features=2):
         super().__init__()
 
-        self.A_hat = Parameter(torch.eye(29).float().cuda(), requires_grad=True)
-        
+        self.A_hat = Parameter(torch.eye(29).float(), requires_grad=True)
+
         self.gconv1 = GraphConv(in_features, 128)
         self.gconv2 = GraphConv(128, 16)
         self.gconv3 = GraphConv(16, out_features, activation=None)
-        
-    
+
     def forward(self, X):
         X_0 = self.gconv1(X, self.A_hat)
         X_1 = self.gconv2(X_0, self.A_hat)
         X_2 = self.gconv3(X_1, self.A_hat)
-        
+
         return X_2
