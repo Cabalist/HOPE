@@ -40,10 +40,14 @@ if args.test:
     print('Test files loaded')
 
 """# Model"""
-
+use_cuda = False
+if args.gpu:
+    use_cuda = True
 
 model = select_model(args.model_def)
-model = nn.DataParallel(model)
+if use_cuda and torch.cuda.is_available():
+    model = model.cuda()
+    model = nn.DataParallel(model, device_ids=args.gpu_number)
 
 """# Load Snapshot"""
 
@@ -82,9 +86,10 @@ if args.train:
             labels2d = Variable(labels2d)
             labels3d = Variable(labels3d)
 
-            inputs = inputs.float()
-            labels2d = labels2d.float()
-            labels3d = labels3d.float()
+            if use_cuda and torch.cuda.is_available():
+                inputs = inputs.float().cuda(device=args.gpu_number[0])
+                labels2d = labels2d.float().cuda(device=args.gpu_number[0])
+                labels3d = labels3d.float().cuda(device=args.gpu_number[0])
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -120,6 +125,12 @@ if args.train:
                 labels2d = labels2d.float()
                 labels3d = labels3d.float()
 
+                if use_cuda and torch.cuda.is_available():
+                    inputs = inputs.float().cuda(device=args.gpu_number[0])
+                    labels2d = labels2d.float().cuda(device=args.gpu_number[0])
+                    labels3d = labels3d.float().cuda(device=args.gpu_number[0])
+
+
                 outputs2d_init, outputs2d, outputs3d = model(inputs)
 
                 loss2d_init = criterion(outputs2d_init, labels2d)
@@ -154,9 +165,10 @@ if args.test:
         labels2d = Variable(labels2d)
         labels3d = Variable(labels3d)
 
-        inputs = inputs.float()
-        labels2d = labels2d.float()
-        labels3d = labels3d.float()
+        if use_cuda and torch.cuda.is_available():
+            inputs = inputs.float().cuda(device=args.gpu_number[0])
+            labels2d = labels2d.float().cuda(device=args.gpu_number[0])
+            labels3d = labels3d.float().cuda(device=args.gpu_number[0])
 
         outputs2d_init, outputs2d, outputs3d = model(inputs)
 
