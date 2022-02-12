@@ -1,107 +1,167 @@
-import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import trimesh
+from trimesh import Trimesh
+
+# ========================================= #
+# Set Path here
+# EXAMPLE:
+#   ROOT = '/path/to/FHAD/hand_pose_action'
+
+ROOT = None
+# ========================================= #
+
+
+if ROOT is None:
+    raise ValueError("Set the ROOT var to the path to the First-Person Hand Action Benchmark (F-PHAB)."
+                     "Data set can be found here: https://guiggh.github.io/publications/first-person-hands/")
 
 
 # Loading utilities
-def load_objects(obj_root):
+def load_objects(obj_root_: Path) -> Dict[str, Trimesh]:
+    """
+    Load Polygon files for objects and convert them to Trimeshs
+    """
     object_names = ['juice', 'liquid_soap', 'milk', 'salt']
     all_models = {}
     for obj_name in object_names:
-        obj_path = os.path.join(obj_root, f'{obj_name}_model', f'{obj_name}_model.ply')
-        mesh = trimesh.load(obj_path)
-        all_models[obj_name] = mesh
+        obj_path = Path(obj_root_, f'{obj_name}_model', f'{obj_name}_model.ply')
+        mesh_ = trimesh.load(obj_path)
+        all_models[obj_name] = mesh_
+
+    # Hack to remedy mismatch with naming in data
+    all_models['juice_bottle'] = all_models['juice']
+    del all_models['juice']
+
     return all_models
 
 
-def get_skeleton(sample, skel_root):
-    skeleton_path = os.path.join(skel_root,
-                                 sample['subject'],
-                                 sample['action_name'],
-                                 sample['seq_idx'],
-                                 'skeleton.txt')
+def get_skeleton(sample_info: 'Sample', skel_root: Path) -> np.ndarray:
+
+    skeleton_path = Path(skel_root,
+                         sample_info.subject,
+                         sample_info.action_name,
+                         sample_info.seq_idx,
+                         'skeleton.txt')
     # print(f'Loading skeleton from {skeleton_path}')
     skeleton_vals = np.loadtxt(skeleton_path)
-    skeleton = skeleton_vals[:, 1:].reshape(skeleton_vals.shape[0], 21, -1)[sample['frame_idx']]
+    skeleton = skeleton_vals[:, 1:].reshape(skeleton_vals.shape[0], 21, -1)[sample_info.frame_idx]
     return skeleton
 
 
-def get_obj_transform(sample, obj_root):
-    seq_path = os.path.join(obj_root,
-                            sample['subject'],
-                            sample['action_name'],
-                            sample['seq_idx'],
-                            'object_pose.txt')
+def get_obj_transform(sample_info: 'Sample', obj_root_: Path) -> np.ndarray:
+    """
+    Load object transforms
+    """
+    seq_path = Path(obj_root_,
+                    sample_info.subject,
+                    sample_info.action_name,
+                    sample_info.seq_idx,
+                    'object_pose.txt')
     with open(seq_path) as seq_f:
         raw_lines = seq_f.readlines()
-    raw_line = raw_lines[sample['frame_idx']]
+    raw_line = raw_lines[sample_info.frame_idx]
     line = raw_line.strip().split(' ')
     trans_matrix = np.array(line[1:]).astype(np.float32)
     trans_matrix = trans_matrix.reshape(4, 4).transpose()
-    # print(f'Loading obj transform from {seq_path}')
     return trans_matrix
 
 
-# Change this path
-root = '/path/to/FHAD/hand_pose_action'
-skeleton_root = os.path.join(root, 'Hand_pose_annotation_v1')
-obj_root = os.path.join(root, 'Object_models')
-obj_trans_root = os.path.join(root, 'Object_6D_pose_annotation_v1_1')
-file_root = os.path.join(root, 'Video_files')
-# Load object mesh
-object_infos = load_objects(obj_root)
-reorder_idx = np.array([0, 1, 6, 7, 8, 2, 9, 10, 11, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20])
+@dataclass
+class Sample:
+    subject: str
+    action_name: str
+    seq_idx: str
+    frame_idx: int
+    object_name: str
 
-cam_extr = np.array([[0.999988496304, -0.00468848412856, 0.000982563360594, 25.7],
-                     [0.00469115935266, 0.999985218048, -0.00273845880292, 1.22],
-                     [-0.000969709653873, 0.00274303671904, 0.99999576807, 3.902],
-                     [0, 0, 0, 1]])
-cam_intr = np.array([[1395.749023, 0, 935.732544],
-                     [0, 1395.749268, 540.681030],
-                     [0, 0, 1]])
 
-images_train = []
-points2d_train = []
-points3d_train = []
+def main():
+    # Setup Paths
+    root_path = Path(ROOT)
+    skeleton_root = Path(root_path, 'Hand_pose_annotation_v1')
+    obj_root = Path(root_path, 'Object_models')
+    obj_trans_root = Path(root_path, 'Object_6D_pose_annotation_v1_1')
+    video_file_root = Path(root_path, 'Video_files')
 
-images_val = []
-points2d_val = []
-points3d_val = []
+    # Load object mesh
+    object_infos = load_objects(obj_root)
+    reorder_idx = np.array([0, 1, 6, 7, 8, 2, 9, 10, 11, 3, 12, 13, 14, 4, 15, 16, 17, 5, 18, 19, 20])
 
-images_test = []
-points2d_test = []
-points3d_test = []
+    cam_extr = np.array([[0.999988496304, -0.00468848412856, 0.000982563360594, 25.7],
+                         [0.00469115935266, 0.999985218048, -0.00273845880292, 1.22],
+                         [-0.000969709653873, 0.00274303671904, 0.99999576807, 3.902],
+                         [0, 0, 0, 1]])
 
-for subject in os.listdir(obj_trans_root):
-    print(subject)
-    for action_name in os.listdir(os.path.join(obj_trans_root, subject)):
-        print(action_name)
-        obj = '_'.join(action_name.split('_')[1:])
-        for seq_idx in os.listdir(os.path.join(obj_trans_root, subject, action_name)):
-            sset = 'train'
-            if seq_idx == '1':
-                sset = 'val'
-            elif seq_idx == '3':
-                sset = 'test'
-            try:
-                for file_name in os.listdir(os.path.join(file_root, subject, action_name, seq_idx, 'color')):
-                    frame_idx = int(file_name.split('.')[0].split('_')[1])
-                    sample = {
-                        'subject': subject,
-                        'action_name': action_name,
-                        'seq_idx': seq_idx,
-                        'frame_idx': frame_idx,
-                        'object': obj
-                    }
-                    img_path = os.path.join(file_root, subject, action_name, seq_idx, 'color', file_name)
+    cam_intr = np.array([[1395.749023, 0, 935.732544],
+                         [0, 1395.749268, 540.681030],
+                         [0, 0, 1]])
 
+    # train
+    images_train = []
+    points2d_train = []
+    points3d_train = []
+
+    # val
+    images_val = []
+    points2d_val = []
+    points3d_val = []
+
+    # test
+    images_test = []
+    points2d_test = []
+    points3d_test = []
+
+    # Traverse the dataset directory and prepare the data for processing
+    for subject in sorted(obj_trans_root.iterdir()):
+        if subject.name.startswith("."):
+            continue
+        print(f"* {subject}")
+
+        for action_name in sorted(subject.iterdir()):
+            if action_name.name.startswith("."):
+                continue
+            print(f' ∟ {action_name.name}')
+
+            for seq_idx in sorted(action_name.iterdir()):
+                if seq_idx.name.startswith("."):
+                    continue
+                print(f'   ∟ {seq_idx.name}')
+
+                video_frame_dir = Path(video_file_root, *seq_idx.parts[-3:], 'color')
+                if not video_frame_dir.exists():
+                    print(f"WARNING: Could not find directory at {video_frame_dir}.  No video data is loaded.")
+                    continue
+
+                for each_frame in video_frame_dir.iterdir():
+                    if each_frame.name.startswith("."):
+                        continue
+
+                    # Extract the filename's frame index to an int
+                    #   i.e. 'color_0007.jpeg' -> 7
+                    frame_idx = int(Path(each_frame).stem.split("_")[1])
+
+                    # Remove the Action from object name
+                    #  i.e 'pour_milk' -> 'milk'
+                    obj = '_'.join(action_name.name.split('_')[1:])
+
+                    sample = Sample(subject.name,
+                                    action_name.name,
+                                    seq_idx.name,
+                                    frame_idx,
+                                    obj
+                                    )
+
+                    # Load skeleton
                     skel = get_skeleton(sample, skeleton_root)[reorder_idx]
 
                     # Load object transform
                     obj_trans = get_obj_transform(sample, obj_trans_root)
 
-                    mesh = object_infos[sample['object']]
+                    mesh = object_infos[sample.object_name]
                     verts = np.array(mesh.bounding_box_oriented.vertices) * 1000
 
                     # Apply transform to object
@@ -124,29 +184,31 @@ for subject in os.listdir(obj_trans_root):
                     points = np.concatenate((skel_camcoords, verts_camcoords))
                     projected_points = np.concatenate((skel_proj, verts_proj))
 
-                    if sset == 'train':
-                        images_train.append(img_path)
-                        points2d_train.append(projected_points)
-                        points3d_train.append(points)
-                    if sset == 'val':
-                        images_val.append(img_path)
+                    if seq_idx == '1':  # val
+                        images_val.append(each_frame)
                         points2d_val.append(projected_points)
                         points3d_val.append(points)
-                    if sset == 'test':
-                        images_test.append(img_path)
+                    elif seq_idx == '3':  # test
+                        images_test.append(each_frame)
                         points2d_test.append(projected_points)
                         points3d_test.append(points)
-            except:
-                print(f'===={subject}, {action_name}, {seq_idx}====')
+                    else:  # train
+                        images_train.append(each_frame)
+                        points2d_train.append(projected_points)
+                        points3d_train.append(points)
 
-np.save('./images-train.npy', np.array(images_train))
-np.save('./points2d-train.npy', np.array(points2d_train))
-np.save('./points3d-train.npy', np.array(points3d_train))
+    np.save('./images-train.npy', np.array(images_train))
+    np.save('./points2d-train.npy', np.array(points2d_train))
+    np.save('./points3d-train.npy', np.array(points3d_train))
 
-np.save('./images-val.npy', np.array(images_val))
-np.save('./points2d-val.npy', np.array(points2d_val))
-np.save('./points3d-val.npy', np.array(points3d_val))
+    np.save('./images-val.npy', np.array(images_val))
+    np.save('./points2d-val.npy', np.array(points2d_val))
+    np.save('./points3d-val.npy', np.array(points3d_val))
 
-np.save('./images-test.npy', np.array(images_test))
-np.save('./points2d-test.npy', np.array(points2d_test))
-np.save('./points3d-test.npy', np.array(points3d_test))
+    np.save('./images-test.npy', np.array(images_test))
+    np.save('./points2d-test.npy', np.array(points2d_test))
+    np.save('./points3d-test.npy', np.array(points3d_test))
+
+
+if __name__ == "__main__":
+    main()
