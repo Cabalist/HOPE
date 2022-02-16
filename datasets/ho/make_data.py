@@ -7,7 +7,7 @@ import numpy as np
 # EXAMPLE:
 #   ROOT = '/path/to/HO3D_v2'
 
-ROOT = None
+ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/fho3d"
 # ========================================= #
 
 

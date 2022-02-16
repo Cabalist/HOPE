@@ -11,7 +11,7 @@ from trimesh import Trimesh
 # EXAMPLE:
 #   ROOT = '/path/to/FHAD/hand_pose_action'
 
-ROOT = None
+ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/aengus.crowley/FHAD/First-Person Hand Action Benchmark (F-PHAB)"
 # ========================================= #
 
 
