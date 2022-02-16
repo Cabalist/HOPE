@@ -1,13 +1,15 @@
 from pathlib import Path
 
 import numpy as np
-
+import os
 # ========================================= #
 # Set Path here
 # EXAMPLE:
 #   ROOT = '/path/to/HO3D_v2'
 
 ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/fho3d"
+os.stdout.write(f"root is {ROOT}\ncdw is {os.getcwd()}\n")
+
 # ========================================= #
 
 
@@ -35,6 +37,7 @@ points3d_val = []
 
 # Train
 for subject in sorted(train_root_path.iterdir()):
+    os.stdout.write(f"writing subject in evaluation: {subject}\n")
     rgb = Path(subject, 'rgb')
     meta = Path(subject, 'meta')
     for rgb_file in sorted(rgb.iterdir()):
@@ -82,6 +85,7 @@ points3d_test = []
 
 # Evaluation
 for subject in sorted(evaluation_root_path.iterdir()):
+    os.stdout.write(f"in evaluation writing subject {subject}\n")
     rgb = Path(subject, 'rgb')
     meta = Path(subject, 'meta')
     for rgb_file in sorted(rgb.iterdir()):
