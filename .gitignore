@@ -1,1 +1,4 @@
 *.npy
+.amlignore
+*.__pycache__*
+*.amltmp
