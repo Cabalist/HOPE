@@ -2,15 +2,17 @@ from pathlib import Path
 
 import numpy as np
 import os
-import sys
 # ========================================= #
 # Set Path here
 # EXAMPLE:
 #   ROOT = '/path/to/HO3D_v2'
 
 ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/fho3d"
-sys.stdout.write(f"root is {ROOT}\ncdw is {os.getcwd()}\n")
+<<<<<<< HEAD
+os.stdout.write(f"root is {ROOT}\ncdw is {os.getcwd()}\n")
 
+=======
+>>>>>>> 6bf9b42 (stash commit I think)
 # ========================================= #
 
 
@@ -38,7 +40,7 @@ points3d_val = []
 
 # Train
 for subject in sorted(train_root_path.iterdir()):
-    sys.stdout.write(f"writing subject in evaluation: {subject}\n")
+    os.stdout.write(f"writing subject in evaluation: {subject}\n")
     rgb = Path(subject, 'rgb')
     meta = Path(subject, 'meta')
     for rgb_file in sorted(rgb.iterdir()):
@@ -85,27 +87,26 @@ points2d_test = []
 points3d_test = []
 
 # Evaluation
+for subject in sorted(evaluation_root_path.iterdir()):
+    os.stdout.write(f"in evaluation writing subject {subject}\n")
+    rgb = Path(subject, 'rgb')
+    meta = Path(subject, 'meta')
+    for rgb_file in sorted(rgb.iterdir()):
+        meta_file = Path(meta, f'{rgb_file.stem}.pkl')
+        data = np.load(meta_file, allow_pickle=True)
 
-sys.stdout.write(f"in evaluation writing subject {subject}\n")
-rgb = Path(subject, 'rgb')
-meta = Path(subject, 'meta')
-for rgb_file in sorted(rgb.iterdir()):
-    sys.stdout.write(f"writting RGB Eval file: {rgb_file}\n")
-    meta_file = Path(meta, f'{rgb_file.stem}.pkl')
-    data = np.load(meta_file, allow_pickle=True)
+        cam_intr = data['camMat']
+        hand3d = np.repeat(np.expand_dims(data['handJoints3D'], 0), 21, 0)
+        hand3d = hand3d[reorder_idx]
+        obj_corners = data['objCorners3D']
+        hand_object3d = np.concatenate([hand3d, obj_corners])
+        hand_object3d = hand_object3d.dot(coordChangeMat.T)
+        hand_object_proj = cam_intr.dot(hand_object3d.transpose()).transpose()
+        hand_object2d = (hand_object_proj / hand_object_proj[:, 2:])[:, :2]
 
-    cam_intr = data['camMat']
-    hand3d = np.repeat(np.expand_dims(data['handJoints3D'], 0), 21, 0)
-    hand3d = hand3d[reorder_idx]
-    obj_corners = data['objCorners3D']
-    hand_object3d = np.concatenate([hand3d, obj_corners])
-    hand_object3d = hand_object3d.dot(coordChangeMat.T)
-    hand_object_proj = cam_intr.dot(hand_object3d.transpose()).transpose()
-    hand_object2d = (hand_object_proj / hand_object_proj[:, 2:])[:, :2]
-
-    images_test.append(rgb_file)
-    points3d_test.append(hand_object3d)
-    points2d_test.append(hand_object2d)
+        images_test.append(rgb_file)
+        points3d_test.append(hand_object3d)
+        points2d_test.append(hand_object2d)
 
 images_test = np.array(images_test)
 points2d_test = np.array(points2d_test)
