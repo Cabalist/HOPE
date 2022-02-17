@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 
+use_cuda = False
 
 class GraphConv(nn.Module):
 
@@ -74,12 +75,20 @@ class GraphUNet(nn.Module):
     def __init__(self, in_features=2, out_features=3):
         super().__init__()
 
-        self.A_0 = Parameter(torch.eye(29).float(), requires_grad=True)
-        self.A_1 = Parameter(torch.eye(15).float(), requires_grad=True)
-        self.A_2 = Parameter(torch.eye(7).float(), requires_grad=True)
-        self.A_3 = Parameter(torch.eye(4).float(), requires_grad=True)
-        self.A_4 = Parameter(torch.eye(2).float(), requires_grad=True)
-        self.A_5 = Parameter(torch.eye(1).float(), requires_grad=True)
+        if use_cuda and torch.cuda.is_available():
+            self.A_0 = Parameter(torch.eye(29).float().cuda(), requires_grad=True)
+            self.A_1 = Parameter(torch.eye(15).float().cuda(), requires_grad=True)
+            self.A_2 = Parameter(torch.eye(7).float().cuda(), requires_grad=True)
+            self.A_3 = Parameter(torch.eye(4).float().cuda(), requires_grad=True)
+            self.A_4 = Parameter(torch.eye(2).float().cuda(), requires_grad=True)
+            self.A_5 = Parameter(torch.eye(1).float().cuda(), requires_grad=True)
+        else:
+            self.A_0 = Parameter(torch.eye(29).float(), requires_grad=True)
+            self.A_1 = Parameter(torch.eye(15).float(), requires_grad=True)
+            self.A_2 = Parameter(torch.eye(7).float(), requires_grad=True)
+            self.A_3 = Parameter(torch.eye(4).float(), requires_grad=True)
+            self.A_4 = Parameter(torch.eye(2).float(), requires_grad=True)
+            self.A_5 = Parameter(torch.eye(1).float(), requires_grad=True)
 
         self.gconv1 = GraphConv(in_features, 4)  # 29 = 21 H + 8 O
         self.pool1 = GraphPool(29, 15)
