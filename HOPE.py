@@ -66,7 +66,7 @@ optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_step, gamma=args.lr_step_gamma)
 scheduler.last_epoch = start
 lambda_1 = 0.01
-lambda_2 = 1
+lambda_2 = 1.0
 
 """# Train"""
 
