@@ -10,16 +10,13 @@ from PIL import Image
 class Dataset(data.Dataset):
 
     def __init__(self, root='./', load_set='train', transform=None):
-        self.root = root  # os.path.expanduser(root)
+        self.root = root
         self.transform = transform
         self.load_set = load_set  # 'train','val','test'
 
         self.images = np.load(os.path.join(root, f'images-{self.load_set}.npy'))
         self.points2d = np.load(os.path.join(root, f'points2d-{self.load_set}.npy'))
         self.points3d = np.load(os.path.join(root, f'points3d-{self.load_set}.npy'))
-
-        # if shuffle:
-        #    random.shuffle(data)
 
     def __getitem__(self, index):
         """
