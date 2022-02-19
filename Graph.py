@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
 
 from utils.dataset import Dataset
 from utils.model import select_model
@@ -17,27 +18,29 @@ def main():
 
     root = args.input_file
 
-    # mean = np.array([120.46480086, 107.89070987, 103.00262132])
-    # std = np.array([5.9113948 , 5.22646725, 5.47829601])
-
     transform = transforms.Compose([transforms.Resize((224, 224)),
                                     transforms.ToTensor()])
 
     if args.train:
+        print("Loading training files...")
         trainset = Dataset(root=root, load_set='train', transform=transform)
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=16)
+        trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=10)
 
-        print('Train files loaded')
+        print('Training files loaded')
 
     if args.val:
+        print("Loading validation files...")
+
         valset = Dataset(root=root, load_set='val', transform=transform)
-        valloader = torch.utils.data.DataLoader(valset, batch_size=args.batch_size, shuffle=False, num_workers=8)
+        valloader = DataLoader(valset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
         print('Validation files loaded')
 
     if args.test:
+        print("Loading test files...")
+
         testset = Dataset(root=root, load_set='test', transform=transform)
-        testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=8)
+        testloader = DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
         print('Test files loaded')
 
@@ -62,28 +65,27 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_step, gamma=args.lr_step_gamma)
     scheduler.last_epoch = start
-    lambda_1 = 0.01
-    lambda_2 = 1
 
     """# Train"""
 
     if args.train:
         print('Begin training the network...')
+        print(f"Looping {args.num_iterations} times...")
+        print(f"Starting with epoch {start}...")
 
         for epoch in range(start, args.num_iterations):  # loop over the dataset multiple times
+            print(f"Running epoch {epoch}...")
             model.train()
             running_loss = 0.0
             train_loss = 0.0
             for i, tr_data in enumerate(trainloader):
                 # get the inputs
-                inputs, labels2d, labels3d = tr_data
+                _, labels2d, labels3d = tr_data
 
                 # wrap them in Variable
-                inputs = Variable(inputs)
                 labels2d = Variable(labels2d)
                 labels3d = Variable(labels3d)
 
-                inputs = inputs.float()
                 labels2d = labels2d.float()
                 labels3d = labels3d.float()
 
@@ -108,14 +110,12 @@ def main():
                 val_loss = 0.0
                 for v, val_data in enumerate(valloader):
                     # get the inputs
-                    inputs, labels2d, labels3d = val_data
+                    _, labels2d, labels3d = val_data
 
                     # wrap them in Variable
-                    inputs = Variable(inputs)
                     labels2d = Variable(labels2d)
                     labels3d = Variable(labels3d)
 
-                    inputs = inputs.float()
                     labels2d = labels2d.float()
                     labels3d = labels3d.float()
 
@@ -142,14 +142,12 @@ def main():
         running_loss = 0.0
         for i, ts_data in enumerate(testloader):
             # get the inputs
-            inputs, labels2d, labels3d = ts_data
+            _, labels2d, labels3d = ts_data
 
             # wrap them in Variable
-            inputs = Variable(inputs)
             labels2d = Variable(labels2d)
             labels3d = Variable(labels3d)
 
-            inputs = inputs.float()
             labels2d = labels2d.float()
             labels3d = labels3d.float()
 
