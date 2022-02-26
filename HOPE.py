@@ -79,65 +79,74 @@ if args.train:
         train_loss = 0.0
         for i, tr_data in enumerate(trainloader):
             # get the inputs
-            inputs, labels2d, labels3d = tr_data
-
-            # wrap them in Variable
-            inputs = Variable(inputs)
-            labels2d = Variable(labels2d)
-            labels3d = Variable(labels3d)
-
-            if use_cuda and torch.cuda.is_available():
-                inputs = inputs.float().cuda(device=args.gpu_number[0])
-                labels2d = labels2d.float().cuda(device=args.gpu_number[0])
-                labels3d = labels3d.float().cuda(device=args.gpu_number[0])
-
-            # zero the parameter gradients
-            optimizer.zero_grad()
-
-            # forward + backward + optimize
-            outputs2d_init, outputs2d, outputs3d = model(inputs)
-            loss2d_init = criterion(outputs2d_init, labels2d)
-            loss2d = criterion(outputs2d, labels2d)
-            loss3d = criterion(outputs3d, labels3d)
-            loss = (lambda_1) * loss2d_init + (lambda_1) * loss2d + (lambda_2) * loss3d
-            loss.backward()
-            optimizer.step()
-
-            # print statistics
-            running_loss += loss.data
-            train_loss += loss.data
-            if (i + 1) % args.log_batch == 0:  # print every log_iter mini-batches
-                print(f'[{epoch + 1:d}, {i + 1:5d}] loss: {running_loss / args.log_batch:.5f}')
-                running_loss = 0.0
-
-        if args.val and (epoch + 1) % args.val_epoch == 0:
-            val_loss = 0.0
-            for v, val_data in enumerate(valloader):
-                # get the inputs
-                inputs, labels2d, labels3d = val_data
+            try:
+                inputs, labels2d, labels3d = tr_data
 
                 # wrap them in Variable
                 inputs = Variable(inputs)
                 labels2d = Variable(labels2d)
                 labels3d = Variable(labels3d)
 
-                inputs = inputs.float()
-                labels2d = labels2d.float()
-                labels3d = labels3d.float()
-
                 if use_cuda and torch.cuda.is_available():
                     inputs = inputs.float().cuda(device=args.gpu_number[0])
                     labels2d = labels2d.float().cuda(device=args.gpu_number[0])
                     labels3d = labels3d.float().cuda(device=args.gpu_number[0])
 
+                # zero the parameter gradients
+                optimizer.zero_grad()
 
+                # forward + backward + optimize
                 outputs2d_init, outputs2d, outputs3d = model(inputs)
-
                 loss2d_init = criterion(outputs2d_init, labels2d)
                 loss2d = criterion(outputs2d, labels2d)
                 loss3d = criterion(outputs3d, labels3d)
                 loss = (lambda_1) * loss2d_init + (lambda_1) * loss2d + (lambda_2) * loss3d
-                val_loss += loss.data
+                loss.backward()
+                optimizer.step()
+
+                # print statistics
+                running_loss += loss.data
+                train_loss += loss.data
+                if (i + 1) % args.log_batch == 0:  # print every log_iter mini-batches
+                    print(f'[{epoch + 1:d}, {i + 1:5d}] loss: {running_loss / args.log_batch:.5f}')
+                    running_loss = 0.0
+            except FileNotFoundError as e:
+                print(e)
+                print(f"tr data is {tr_data}")
+                continue
+
+        if args.val and (epoch + 1) % args.val_epoch == 0:
+            val_loss = 0.0
+            for v, val_data in enumerate(valloader):
+                try:
+                    # get the inputs
+                    inputs, labels2d, labels3d = val_data
+
+                    # wrap them in Variable
+                    inputs = Variable(inputs)
+                    labels2d = Variable(labels2d)
+                    labels3d = Variable(labels3d)
+
+                    inputs = inputs.float()
+                    labels2d = labels2d.float()
+                    labels3d = labels3d.float()
+
+                    if use_cuda and torch.cuda.is_available():
+                        inputs = inputs.float().cuda(device=args.gpu_number[0])
+                        labels2d = labels2d.float().cuda(device=args.gpu_number[0])
+                        labels3d = labels3d.float().cuda(device=args.gpu_number[0])
+
+                    outputs2d_init, outputs2d, outputs3d = model(inputs)
+
+                    loss2d_init = criterion(outputs2d_init, labels2d)
+                    loss2d = criterion(outputs2d, labels2d)
+                    loss3d = criterion(outputs3d, labels3d)
+                    loss = (lambda_1) * loss2d_init + (lambda_1) * loss2d + (lambda_2) * loss3d
+                    val_loss += loss.data
+                except FileNotFoundError as e:
+                    print(e)
+                    print(f"val data is: {val_data}")
+                    continue
             print(f'val error: {val_loss / (v + 1):.5f}')
         losses.append((train_loss / (i + 1)).cpu().numpy())
 
@@ -157,21 +166,26 @@ if args.test:
 
     running_loss = 0.0
     for i, ts_data in enumerate(testloader):
-        # get the inputs
-        inputs, labels2d, labels3d = ts_data
+        try:
+            # get the inputs
+            inputs, labels2d, labels3d = ts_data
 
-        # wrap them in Variable
-        inputs = Variable(inputs)
-        labels2d = Variable(labels2d)
-        labels3d = Variable(labels3d)
+            # wrap them in Variable
+            inputs = Variable(inputs)
+            labels2d = Variable(labels2d)
+            labels3d = Variable(labels3d)
 
-        if use_cuda and torch.cuda.is_available():
-            inputs = inputs.float().cuda(device=args.gpu_number[0])
-            labels2d = labels2d.float().cuda(device=args.gpu_number[0])
-            labels3d = labels3d.float().cuda(device=args.gpu_number[0])
+            if use_cuda and torch.cuda.is_available():
+                inputs = inputs.float().cuda(device=args.gpu_number[0])
+                labels2d = labels2d.float().cuda(device=args.gpu_number[0])
+                labels3d = labels3d.float().cuda(device=args.gpu_number[0])
 
-        outputs2d_init, outputs2d, outputs3d = model(inputs)
+            outputs2d_init, outputs2d, outputs3d = model(inputs)
 
-        loss = criterion(outputs3d, labels3d)
-        running_loss += loss.data
+            loss = criterion(outputs3d, labels3d)
+            running_loss += loss.data
+        except FileNotFoundError as e:
+            print(e)
+            print(f"ts_data: {ts_data}")
+            continue
     print(f'test error: {running_loss / (i + 1):.5f}')
