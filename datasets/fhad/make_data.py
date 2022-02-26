@@ -13,13 +13,13 @@ from trimesh import Trimesh
 import os
 import sys
 
-ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/aengus.crowley/FHAD/First-Person Hand Action Benchmark (F-PHAB)"
-<<<<<<< HEAD
-=======
-sys.stdout.write(f'pwd is {os.getcwd()}')
+ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/aengus.crowley/FHAD/F-PHAB"
+# <<<<<<< HEAD
+# =======
+print(f'pwd is {os.getcwd()}')
 
-sys.stdout.write(f'ROOT is: {ROOT} which is a dir {os.path.isdir(ROOT)}\n\n')
->>>>>>> 6bf9b42 (stash commit I think)
+print(f'ROOT is: {ROOT} which is a dir {os.path.isdir(ROOT)}\n\n')
+# >>>>>>> 6bf9b42 (stash commit I think)
 # ========================================= #
 
 
