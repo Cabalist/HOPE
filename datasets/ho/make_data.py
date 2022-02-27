@@ -9,6 +9,8 @@ import sys
 #   ROOT = '/path/to/HO3D_v2'
 
 ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/fho3d"
+Path = Path('..', '..', 'fho3d')
+
 sys.stdout.write(f"root is {ROOT}\ncdw is {os.getcwd()}\n")
 
 # ========================================= #

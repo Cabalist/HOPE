@@ -13,7 +13,8 @@ from trimesh import Trimesh
 import os
 import sys
 
-ROOT = "/mnt/batch/tasks/shared/LS_root/mounts/clusters/wack/code/Users/aengus.crowley/FHAD/F-PHAB"
+ROOT = "Users/aengus.crowley/FHAD/First-Person Hand Action Benchmark (F-PHAB)"
+ROOT = Path('..', 'FHAD', "First-Person Hand Action Benchmark (F-PHAB)" )
 # <<<<<<< HEAD
 # =======
 print(f'pwd is {os.getcwd()}')
